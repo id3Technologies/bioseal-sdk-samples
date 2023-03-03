@@ -36,6 +36,20 @@ namespace id3.BioSeal.Samples
 		}
 
         /// <summary>
+        /// Converts a short value to an hexadecimal string.
+        /// </summary>
+        /// <param name="value">Integer (max. 256^3)</param>
+        /// <returns></returns>
+        public static string GetString(int value)
+        {
+            byte swId1 = (byte)(((short)value) >> 16);
+            byte swId2 = (byte)(((short)value) >> 8);
+            byte swVersion = (byte)((short)value);
+
+            return BitConverter.ToString(new byte[] { swId1, swId2, swVersion }).Replace("-", " ");
+        }
+
+        /// <summary>
         /// Converts a byte value to an hexadecimal string.
         /// </summary>
         /// <param name="value"></param>

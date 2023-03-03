@@ -10,6 +10,11 @@ namespace id3.BioSeal.Samples
 
     public static class BioSealSDKTools
     {
+        // cache variables
+        private static bool localCache_ = true;
+        private static string localCacheDir_ = @"C:\temp\cache_bioseal\";
+        private static bool internalCache_ = true;
+
         // BioSeal instance
         private static Bioseal bioseal_;
 
@@ -18,10 +23,9 @@ namespace id3.BioSeal.Samples
         {
             bioseal_ = new Bioseal();
 
-            // optionnal
-#if DEBUG
-            bioseal_.ExternalResourceCallback = new ResourceCallbackHandler(GetExternalResource);
-#endif
+            // optionnal, use cache
+            bioseal_.ExternalResourceCallback = new ResourceCallbackHandler(GetExternalResourceWithCache);
+            bioseal_.EnableDownloadCache = internalCache_;
         }
 
         public static void Decode(byte[] data)
@@ -35,6 +39,21 @@ namespace id3.BioSeal.Samples
             {
                 throw ex;
             }
+        }
+
+        public static void DecodeBase32String(string text)
+        {
+            bioseal_.DecodeFromString(text);
+        }
+
+        public static void Verify()
+        {
+            bioseal_.Verify();
+        }
+
+        public static BiosealFormat GetFormat()
+        {
+            return bioseal_.GetFormat();
         }
 
         #region biographics
@@ -254,22 +273,106 @@ namespace id3.BioSeal.Samples
 
         #endregion
 
-        #region manifest
+        #region signature
 
         /// <summary>
-        /// Gets the use case identifier from the manifest of the BioSeal instance.
+        /// Gets the signature verification status (1 = true, 0 = false, -1 = not verificated or not verificable).
         /// </summary>
-        public static string GetUseCaseID()
+        public static int GetSignatureVerifiedStatus()
         {
-            return HexTools.GetString((ushort)bioseal_.GetManifestId());
+            return bioseal_.VerificationResult.VdsSignatureVerified;
         }
 
         /// <summary>
-        /// Gets the use case version from the manifest of the BioSeal instance.
+        /// Gets the certification chain verified status (1 = true, 0 = false, -1 = not verificated or not verificable).
         /// </summary>
-        public static string GetUseCaseVersion()
+        public static int GetCertificationChainVerifiedStatus()
         {
-            return HexTools.GetString((byte)bioseal_.GetManifestVersion());
+            return bioseal_.VerificationResult.CertificationChainVerified;
+        }
+
+        /// <summary>
+        /// Gets the certificate usage authorized status (1 = true, 0 = false, -1 = not verificated or not verificable).
+        /// </summary>
+        public static int GetSigningCertificateUsageAuthorized()
+        {
+            return bioseal_.VerificationResult.SigningCertificateUsageAuthorized;
+        }
+
+        #endregion
+
+        #region governance
+
+        /// <summary>
+        /// Gets the LOTL url.
+        /// </summary>
+        public static string GetLOTLUrl()
+        {
+            return bioseal_.GetLotlUrl();
+        }
+
+        /// <summary>
+        /// Gets the TSL url.
+        /// </summary>
+        public static string GetTSLUrl()
+        {
+            return bioseal_.GetTslUrl();
+        }
+
+        /// <summary>
+        /// Gets the manifest url.
+        /// </summary>
+        public static string GetManifestUrl()
+        {
+            return bioseal_.GetManifestUrl();
+        }
+
+        /// <summary>
+        /// Gets the LOTL validity status.
+        /// </summary>
+        public static int GetLOTLValidityStatus()
+        {
+            return bioseal_.VerificationResult.LotlGovernanceValid;
+        }
+
+        /// <summary>
+        /// Gets the TSL validity status.
+        /// </summary>
+        public static int GetTSLValidityStatus()
+        {
+            return bioseal_.VerificationResult.TslGovernanceValid;
+        }
+
+        /// <summary>
+        /// Gets the manifest validity status.
+        /// </summary>
+        public static int GetManifestValidityStatus()
+        {
+            return bioseal_.VerificationResult.ManifestGovernanceValid;
+        }
+
+        /// <summary>
+        /// Gets the authority verified status (1 = true, 0 = false, -1 = not verificated or not verificable).
+        /// </summary>
+        public static int GetAuthorityVerifiedStatus()
+        {
+            return bioseal_.VerificationResult.CaCertificateVerified;
+        }
+
+        #endregion
+
+        #region manifest
+
+        /// <summary>
+        /// Gets the use case identifier and version from the manifest of the BioSeal instance.
+        /// </summary>
+        public static string GetUseCaseID()
+        {
+            string hexStr = HexTools.GetString(bioseal_.GetManifestId());
+            hexStr = hexStr.Replace(" ", "");
+            hexStr = hexStr.Insert(4, "-");
+
+            return hexStr;
         }
 
         /// <summary>
@@ -302,19 +405,51 @@ namespace id3.BioSeal.Samples
         }
 
         /// <summary>
-        /// Gets the certificate issuer from the BioSeal instance.
+        /// Gets the certificate issuer common name from the BioSeal instance.
         /// </summary>
         public static string GetCertificateIssuer()
         {
-            return bioseal_.CertificateInformation.GetIssuerCn();
+            return bioseal_.CertificateInformation.GetIssuerCommonName();
         }
 
         /// <summary>
-        /// Gets the certificate issuer subject from the BioSeal instance.
+        /// Gets the certificate subject common name from the BioSeal instance.
         /// </summary>
         public static string GetCertificateSubject()
         {
-            return bioseal_.CertificateInformation.GetSubjectCn();
+            return bioseal_.CertificateInformation.GetSubjectCommonName();
+        }
+
+        /// <summary>
+        /// Gets the certificate issuer organization from the BioSeal instance.
+        /// </summary>
+        public static string GetCertificateSubjectOrganization()
+        {
+            return bioseal_.CertificateInformation.GetSubjectOrganization();
+        }
+
+        /// <summary>
+        /// Gets the certificate issuer organization unit from the BioSeal instance.
+        /// </summary>
+        public static string GetCertificateSubjectOrganizationUnit()
+        {
+            return bioseal_.CertificateInformation.GetSubjectOrganizationalUnit();
+        }
+
+        /// <summary>
+        /// Gets the certificate issuer organization from the BioSeal instance.
+        /// </summary>
+        public static string GetCertificateIssuerOrganization()
+        {
+            return bioseal_.CertificateInformation.GetIssuerOrganization();
+        }
+
+        /// <summary>
+        /// Gets the certificate issuer organization unit from the BioSeal instance.
+        /// </summary>
+        public static string GetCertificateIssuerOrganizationUnit()
+        {
+            return bioseal_.CertificateInformation.GetIssuerOrganizationalUnit();
         }
 
         /// <summary>
@@ -377,7 +512,7 @@ namespace id3.BioSeal.Samples
         /// </summary>
         public static string GetJSONRepresentation()
         {
-            return bioseal_.BuildPayloadAsJson();
+            return bioseal_.BuildPayloadAsJson(String.Empty);
         }
 
         #endregion
@@ -397,7 +532,9 @@ namespace id3.BioSeal.Samples
             {
                 using (ResourceCallbackArgs args = new ResourceCallbackArgs(argsPtr))
                 {
+#if DEBUG
                     Console.WriteLine("   BioSeal decode URI: " + args.Uri);
+#endif
                     args.Download();
                 }
             }
@@ -421,23 +558,37 @@ namespace id3.BioSeal.Samples
             {
                 using (ResourceCallbackArgs args = new ResourceCallbackArgs(argsPtr))
                 {
-                    // disk cache
-                    string[] cache_files = Directory.GetFiles(@"c:\temp\cache_bioseal\", args.ResourceName);
-                    if (cache_files.Length == 0)
+                    if (!localCache_)
                     {
-                        try
-                        {
-                            args.Download();
-                            File.WriteAllBytes(@"c:\temp\cache_bioseal\" + args.ResourceName, args.OutputData);
-                        }
-                        catch (WebException /*ex*/)
-                        {
-                            err = (int)BiosealError.ResourceNotFound;
-                        }
+                        args.Download();
                     }
                     else
                     {
-                        args.OutputData = File.ReadAllBytes(cache_files[0]);
+#if DEBUG
+                        Console.WriteLine("URI = " + args.Uri);
+#endif
+
+                        // Cache disque
+                        if (!Directory.Exists(localCacheDir_))
+                            Directory.CreateDirectory(localCacheDir_);
+
+                        string[] cache_files = Directory.GetFiles(localCacheDir_, args.ResourceName);
+                        if (cache_files.Length == 0 || args.RequiresUpdate)
+                        {
+                            try
+                            {
+                                args.Download();
+                                File.WriteAllBytes(localCacheDir_ + args.ResourceName, args.OutputData);
+                            }
+                            catch (BiosealException)
+                            {
+                                err = (int)BiosealError.ResourceNotFound;
+                            }
+                        }
+                        else
+                        {
+                            args.OutputData = File.ReadAllBytes(cache_files[0]);
+                        }
                     }
                 }
             }

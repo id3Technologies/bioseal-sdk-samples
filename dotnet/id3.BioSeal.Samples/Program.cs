@@ -38,8 +38,8 @@ namespace id3.BioSeal.Samples
             BioSealSDKTools.Decode(dataBioSeal);
 
             // display manifest information
+            Console.WriteLine("   Use case: " + BioSealSDKTools.GetUseCaseID());
             Console.WriteLine("   Document name: " + BioSealSDKTools.GetDocumentName());
-            Console.WriteLine("   Use case: " + BioSealSDKTools.GetUseCaseID() + "-" + BioSealSDKTools.GetUseCaseVersion());
 
             // display biographic information
             Console.WriteLine("   Biographics:");
@@ -77,14 +77,34 @@ namespace id3.BioSeal.Samples
             File.WriteAllText(path.Replace(".bin", ".json"), jsonPayload);
             Console.WriteLine("   JSON representation saved in data folder");
 
+            // display signature information
+            Console.WriteLine("   Signature:");
+            Console.WriteLine("      Signature verified status: " + BioSealSDKTools.GetSignatureVerifiedStatus());
+            Console.WriteLine("      Certification chain verified status: " + BioSealSDKTools.GetCertificationChainVerifiedStatus());
+            Console.WriteLine("      Certificate usage authorized status: " + BioSealSDKTools.GetSigningCertificateUsageAuthorized());
+
+            // display governance information
+            Console.WriteLine("   Governance:");
+            Console.WriteLine("      LoTL: " + BioSealSDKTools.GetLOTLUrl());
+            Console.WriteLine("      TSL: " + BioSealSDKTools.GetTSLUrl());
+            Console.WriteLine("      Manifest: " + BioSealSDKTools.GetManifestUrl());
+            Console.WriteLine("      LoTL valid status: " + BioSealSDKTools.GetLOTLValidityStatus());
+            Console.WriteLine("      TSL valid status: " + BioSealSDKTools.GetTSLValidityStatus());
+            Console.WriteLine("      Manifest valid status: " + BioSealSDKTools.GetManifestValidityStatus());
+            Console.WriteLine("      Authority verified status: " + BioSealSDKTools.GetAuthorityVerifiedStatus());
+
             // display certificate information
             Console.WriteLine("   Certificate:");
             Console.WriteLine("      Authority ID: " + BioSealSDKTools.GetCertificateAuthorityId());
             Console.WriteLine("      Authority issuing country: " + BioSealSDKTools.GetCertificateAuthorityIssuingCountry());
             Console.WriteLine("      Issuer: " + BioSealSDKTools.GetCertificateIssuer());
             Console.WriteLine("      Subject: " + BioSealSDKTools.GetCertificateSubject());
+            Console.WriteLine("      Organization: " + BioSealSDKTools.GetCertificateSubjectOrganization());
+            Console.WriteLine("      Organization unit: " + BioSealSDKTools.GetCertificateSubjectOrganizationUnit());
             Console.WriteLine("      Date of creation: " + BioSealSDKTools.GetCertificateCreationDate().ToString());
             Console.WriteLine("      Date of expiration: " + BioSealSDKTools.GetCertificateExpirationDate().ToString());
+
+            Console.WriteLine();
         }
     }
 }
