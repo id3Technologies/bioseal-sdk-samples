@@ -17,7 +17,7 @@ The version of this repository is made of 4 digits:
 This strategy is employed to ensure version consistency among the various supported languages. When updating the BioSeal SDK version, all the samples are updated as well.
 
 For this release of the samples the version numbers are: 
-* Samples version: **1.11.1.1**
+* Samples version: **1.11.1.2**
 * Required id3 BioSeal SDK version: **1.11.1**
 
 ## Getting started

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace id3.BioSeal.Samples
 {
@@ -8,6 +9,10 @@ namespace id3.BioSeal.Samples
 
     class Program
     {
+        static Bioseal bioseal_;
+        static bool localCache_ = true;
+        static string localCacheDir_ = @"C:\temp\cache_bioseal\";
+
         static void Main(string[] args)
         {
             Console.WriteLine("-------------------");
@@ -15,7 +20,11 @@ namespace id3.BioSeal.Samples
             Console.WriteLine("-------------------");
 
             // The bioseal instance must first be initialized
-            BioSealSDKTools.Initialize();
+            bioseal_ = new Bioseal();
+
+            // optionnal, use cache
+            bioseal_.ExternalResourceCallback = new ResourceCallbackHandler(GetExternalResourceWithCache);
+            bioseal_.EnableDownloadCache = true;
 
             // This basic sample shows how to read BioSeal biographics only contents
             displayBioSealInfo(@"../../../../data/ExBioSealBiographics.bin");
@@ -35,76 +44,236 @@ namespace id3.BioSeal.Samples
             Console.WriteLine();
             Console.WriteLine("Decoding BioSeal file " + path);
             byte[] dataBioSeal = File.ReadAllBytes(path);
-            BioSealSDKTools.Decode(dataBioSeal);
+            try
+            {
+                bioseal_.Decode(dataBioSeal);
+                bioseal_.Verify();
+            }
+            catch (BiosealException ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw ex;
+            }
 
+            Console.WriteLine($"  BioSeal format : {bioseal_.Format}");
             // display manifest information
-            Console.WriteLine("   Use case: " + BioSealSDKTools.GetUseCaseID());
-            Console.WriteLine("   Document name: " + BioSealSDKTools.GetDocumentName());
+            Console.WriteLine("   Use case: " + $"{bioseal_.ManifestId:X6}");
+            // enumerate available languages
+            using (var supportedLanguages = bioseal_.SupportedLanguages)
+            {
+                foreach (string language in supportedLanguages)
+                {
+                    Console.WriteLine($"   Document name: '{bioseal_.GetDocumentName(language)}'");
+                }
+            }
 
-            // display biographic information
-            Console.WriteLine("   Biographics:");
-            Dictionary<string, object> biographics = BioSealSDKTools.GetBiographics();
-            foreach (KeyValuePair<string, object> keyValue in biographics)
+            // display payload information
+            Console.WriteLine("   Payload:");
+            Dictionary<string, object> payload = GetPayload();
+            foreach (KeyValuePair<string, object> keyValue in payload)
                 Console.WriteLine($"      {keyValue.Key}: {keyValue.Value}");
 
             // display face template if existing
-            bool hasFaceTemplate = BioSealSDKTools.ContainsFaceTemplate();
+            bool hasFaceTemplate = bioseal_.ContainsFaceTemplates;
             Console.WriteLine("   Face template: " + hasFaceTemplate);
             if (hasFaceTemplate)
             {
-                byte[] faceTemplateData = BioSealSDKTools.GetFaceTemplate();
-                Console.WriteLine("   Face template saved in data folder");
-                File.WriteAllBytes(path.Replace(".bin", ".template"), faceTemplateData);
+                using (var field_face_list = bioseal_.FindBiometrics(BiometricDataType.FaceTemplate, BiometricFormat.Undefined))
+                {
+                    if (field_face_list.Count > 0)
+                    {
+                        var field_face = field_face_list.Get(0);
+                        Console.WriteLine("   Face template saved in data folder");
+                        File.WriteAllBytes(path.Replace(".bin", ".template"), field_face.ValueAsBinary);
+                    }
+                }
             }
 
             // display and save face image if existing
-            bool hasFaceImage = BioSealSDKTools.ContainsFaceImage();
+            bool hasFaceImage = bioseal_.ContainsFaceImages;
             Console.WriteLine("   Face image: " + hasFaceImage);
             if (hasFaceImage)
             {
-                byte[] faceImageData = BioSealSDKTools.GetFaceImageData();
-                Console.WriteLine("   Face image saved in data folder");
-                File.WriteAllBytes(path.Replace(".bin", ".webp"), faceImageData);
+                using (var field_face_list = bioseal_.FindBiometrics(BiometricDataType.FaceImage, BiometricFormat.Undefined))
+                {
+                    if (field_face_list.Count > 0)
+                    {
+                        var field_face = field_face_list.Get(0);
+                        Console.WriteLine("   Face image saved in data folder");
+                        File.WriteAllBytes(path.Replace(".bin", ".webp"), field_face.ValueAsBinary);
+                    }
+                }
             }
 
             // fetch and save presentation view
-            string htmlPresentationView = BioSealSDKTools.GetPresentationView();
-            File.WriteAllText(path.Replace(".bin", ".html"), htmlPresentationView);
+            Console.WriteLine("   Presentation view supported languages:");
+            foreach (string supportedLanguage in bioseal_.SupportedHtmlViewLanguages)
+            {
+                Console.WriteLine("      " + supportedLanguage);
+            }
+            // Get default language
+            bioseal_.BuildHtmlView(null, true);
+            File.WriteAllText(path.Replace(".bin", ".html"), bioseal_.HtmlView);
             Console.WriteLine("   Presentation view saved in data folder");
 
             // build and save JSON file
-            string jsonPayload = BioSealSDKTools.GetJSONRepresentation();
+            string jsonPayload = bioseal_.BuildPayloadAsJson("  ");
             File.WriteAllText(path.Replace(".bin", ".json"), jsonPayload);
             Console.WriteLine("   JSON representation saved in data folder");
 
             // display signature information
             Console.WriteLine("   Signature:");
-            Console.WriteLine("      Signature verified status: " + BioSealSDKTools.GetSignatureVerifiedStatus());
-            Console.WriteLine("      Certification chain verified status: " + BioSealSDKTools.GetCertificationChainVerifiedStatus());
-            Console.WriteLine("      Certificate usage authorized status: " + BioSealSDKTools.GetSigningCertificateUsageAuthorized());
+            Console.WriteLine("      Signature verified status: " + bioseal_.VerificationResult.VdsSignatureVerified);
+            Console.WriteLine("      Certification chain verified status: " + bioseal_.VerificationResult.CertificationChainVerified);
+            Console.WriteLine("      Certificate usage authorized status: " + bioseal_.VerificationResult.SigningCertificateUsageAuthorized);
 
             // display governance information
             Console.WriteLine("   Governance:");
-            Console.WriteLine("      LoTL: " + BioSealSDKTools.GetLOTLUrl());
-            Console.WriteLine("      TSL: " + BioSealSDKTools.GetTSLUrl());
-            Console.WriteLine("      Manifest: " + BioSealSDKTools.GetManifestUrl());
-            Console.WriteLine("      LoTL valid status: " + BioSealSDKTools.GetLOTLValidityStatus());
-            Console.WriteLine("      TSL valid status: " + BioSealSDKTools.GetTSLValidityStatus());
-            Console.WriteLine("      Manifest valid status: " + BioSealSDKTools.GetManifestValidityStatus());
-            Console.WriteLine("      Authority verified status: " + BioSealSDKTools.GetAuthorityVerifiedStatus());
+            Console.WriteLine("      LoTL: " + bioseal_.LotlUrl);
+            Console.WriteLine("      TSL: " + bioseal_.TslUrl);
+            Console.WriteLine("      Manifest: " + bioseal_.ManifestUrl);
+            Console.WriteLine("      LoTL valid status: " + bioseal_.VerificationResult.LotlGovernanceValid);
+            Console.WriteLine("      TSL valid status: " + bioseal_.VerificationResult.TslGovernanceValid);
+            Console.WriteLine("      Manifest valid status: " + bioseal_.VerificationResult.ManifestGovernanceValid);
+            Console.WriteLine("      Authority verified status: " + bioseal_.VerificationResult.CaCertificateVerified);
 
             // display certificate information
             Console.WriteLine("   Certificate:");
-            Console.WriteLine("      Authority ID: " + BioSealSDKTools.GetCertificateAuthorityId());
-            Console.WriteLine("      Authority issuing country: " + BioSealSDKTools.GetCertificateAuthorityIssuingCountry());
-            Console.WriteLine("      Issuer: " + BioSealSDKTools.GetCertificateIssuer());
-            Console.WriteLine("      Subject: " + BioSealSDKTools.GetCertificateSubject());
-            Console.WriteLine("      Organization: " + BioSealSDKTools.GetCertificateSubjectOrganization());
-            Console.WriteLine("      Organization unit: " + BioSealSDKTools.GetCertificateSubjectOrganizationUnit());
-            Console.WriteLine("      Date of creation: " + BioSealSDKTools.GetCertificateCreationDate().ToString());
-            Console.WriteLine("      Date of expiration: " + BioSealSDKTools.GetCertificateExpirationDate().ToString());
+            Console.WriteLine("      Authority ID: " + bioseal_.CertificateAuthorityId);
+            Console.WriteLine("      Authority issuing country: " + bioseal_.CertificateAuthorityIssuingCountry);
+            Console.WriteLine("      Issuer: " + bioseal_.CertificateInformation.IssuerCommonName);
+            Console.WriteLine("      Subject: " + bioseal_.CertificateInformation.SubjectCommonName);
+            Console.WriteLine("      Organization: " + bioseal_.CertificateInformation.SubjectOrganization);
+            Console.WriteLine("      Organization unit: " + bioseal_.CertificateInformation.SubjectOrganizationalUnit);
+            Console.WriteLine("      Date of creation: " + bioseal_.CertificateInformation.NotBefore.ToString());
+            Console.WriteLine("      Date of expiration: " + bioseal_.CertificateInformation.NotAfter.ToString());
 
             Console.WriteLine();
         }
+
+        /// <summary>
+        /// Gets the dictionary of biographics data from the BioSeal instance.
+        /// </summary>
+        public static Dictionary<string, object> GetPayload()
+        {
+            Dictionary<string, object> payload = new Dictionary<string, object>();
+            // Scan payload
+            string data = "?"; // default
+            foreach (Field field in bioseal_.Payload)
+            {
+                if (field.IsNull)
+                {
+                    data = "null";
+                }
+                else
+                {
+                    switch (field.FieldType)
+                    {
+                        case FieldType.Integer:
+                            data = field.ValueAsInteger.ToString();
+                            break;
+
+                        case FieldType.Boolean:
+                            data = field.ValueAsBoolean.ToString();
+                            break;
+
+                        case FieldType.Float:
+                            data = field.ValueAsFloat.ToString();
+                            break;
+
+                        case FieldType.String:
+                            data = field.ValueAsString;
+                            break;
+
+                        case FieldType.Binary:
+                            data = BitConverter.ToString(field.ValueAsBinary).Replace("-", "");
+                            break;
+
+                        case FieldType.Date:
+                            {
+                                var datetime = field.ValueAsDateTime;
+                                System.DateTime date_time;
+                                date_time = new System.DateTime(datetime.Year, datetime.Month, datetime.Day);
+                                data = date_time.ToLongDateString();
+                                break;
+                            }
+
+                        case FieldType.Time:
+                            {
+                                var time = field.ValueAsDateTime;
+                                var now = System.DateTime.Now;
+                                var date_time = new System.DateTime(now.Year, now.Month, now.Day, time.Hour, time.Minute, time.Second);
+                                data = date_time.ToShortTimeString();
+                                break;
+                            }
+
+                        case FieldType.Timestamp:
+                            {
+                                var datetime = field.ValueAsDateTime;
+                                var date_time = new System.DateTime(datetime.Year, datetime.Month, datetime.Day, datetime.Hour, datetime.Minute, datetime.Second);
+                                data = date_time.ToString();
+                                break;
+                            }
+                    }
+                }
+                payload.Add(field.Name, data);
+            }
+            return payload;
+        }
+
+        /// <summary>
+        /// Implements the GetExternalResource with cache callback.
+        /// </summary>
+        /// <param name="context">Bioseal handle</param>
+        /// <param name="argsPtr">ResourceCallbackArgs handle</param>
+        /// <returns>Error code</returns>
+        static int GetExternalResourceWithCache(IntPtr context, IntPtr argsPtr)
+        {
+            int err = 0;
+            try
+            {
+                using (ResourceCallbackArgs args = new ResourceCallbackArgs(argsPtr))
+                {
+                    if (!localCache_)
+                    {
+                        args.Download();
+                    }
+                    else
+                    {
+#if DEBUG
+                        Console.WriteLine("URI = " + args.Uri);
+#endif
+                        // Cache disque
+                        if (!Directory.Exists(localCacheDir_))
+                            Directory.CreateDirectory(localCacheDir_);
+
+                        string[] cache_files = Directory.GetFiles(localCacheDir_, args.ResourceName);
+                        if (cache_files.Length == 0 || args.RequiresUpdate)
+                        {
+                            try
+                            {
+                                args.Download();
+                                File.WriteAllBytes(localCacheDir_ + args.ResourceName, args.OutputData);
+                            }
+                            catch (BiosealException)
+                            {
+                                err = (int)BiosealError.ResourceNotFound;
+                            }
+                        }
+                        else
+                        {
+                            args.OutputData = File.ReadAllBytes(cache_files[0]);
+                        }
+                    }
+                }
+            }
+            catch (BiosealException ex)
+            {
+                Console.WriteLine(ex.Message);
+                err = (int)BiosealError.ExceptionInCallback;
+            }
+            return err;
+        }
+
     }
 }
