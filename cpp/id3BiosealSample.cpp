@@ -112,6 +112,14 @@ template <class T, typename F> void getString(T handle, F fct, std::string &str)
     str.resize(str_size);
 }
 
+// Generic function for id3 binary API
+template <class T, typename F> void getBinary(T handle, F fct, std::vector<uint8_t> &data) {
+    int data_size = -1;
+    fct(handle, nullptr, &data_size);
+    data.resize(data_size);
+    fct(handle, data.data(), &data_size);
+}
+
 std::string getString(ID3_BIOSEAL_STRING_ARRAY keys, int index) {
     int str_size = -1;
     id3BiosealStringArray_Get(keys, index, nullptr, &str_size);
@@ -149,27 +157,29 @@ int getExternalResourceWithCache(void *context, ID3_BIOSEAL_RESOURCE_CALLBACK_AR
         printf("URI = '%s'\n", uri.c_str());
 #endif
         //std::string res_name = getResourceName(hArgs);
+        bool requiresUpdate = false;
+        id3BiosealResourceCallbackArgs_GetRequiresUpdate(hArgs, &requiresUpdate);
         std::string res_name = getString(hArgs, id3BiosealResourceCallbackArgs_GetResourceName);
         filesystem::path data_file = data_path / res_name;
-        if (exists(data_file)) {
-
+        if (!requiresUpdate && exists(data_file)) {
             std::vector<uint8_t> data;
-            readBinaryFile(data_file.string(), data);
-            id3BiosealResourceCallbackArgs_SetOutputData(hArgs, data.data(), (int)data.size());
+            if (readBinaryFile(data_file.string(), data)) {
+                err = id3BiosealResourceCallbackArgs_SetOutputData(hArgs, data.data(), (int)data.size());
+            }
+            else {
+                err = id3BiosealError_ExceptionInCallback;
+            }
         }
         else {
             err = id3BiosealResourceCallbackArgs_Download(hArgs);
+            if (err == 0) {
+                std::vector<uint8_t> data;
+                getBinary(hArgs, id3BiosealResourceCallbackArgs_GetOutputData, data);
+                writeBinaryFile(data_file.string(), data);
+            }
         }
     }
     return err;
-}
-
-std::vector<uint8_t> getValueAsBinary(ID3_BIOSEAL_FIELD field) {
-    int data_size = -1;
-    id3BiosealField_GetValueAsBinary(field, nullptr, &data_size);
-    std::vector<uint8_t> data(data_size);
-    id3BiosealField_GetValueAsBinary(field, data.data(), &data_size);
-    return data;
 }
 
 std::string getValueAsBinaryString(ID3_BIOSEAL_FIELD field) {
@@ -316,7 +326,8 @@ bool extractBiometrics(ID3_BIOSEAL hBioseal, id3BiosealBiometricDataType eBiomet
         id3BiosealField_Initialize(&hField);
         int sdk_err = id3BiosealFieldList_Get(hResultFieldList, 0, hField);
         if (sdk_err == 0) {
-            auto data = getValueAsBinary(hField);
+            std::vector<uint8_t> data;
+            getBinary(hField, id3BiosealField_GetValueAsBinary, data);
             filesystem::path fs_path = path;
             fs_path.replace_extension(ext);
             writeBinaryFile(fs_path.string(), data);

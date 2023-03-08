@@ -1,6 +1,9 @@
 # id3 BioSeal SDK Samples Changelog
 
-## Version 1.11.2 (2023-03-17)
+## Version 1.11.1.3 (2023-03-08)
+- Fixed issue in c++ callback : file not created and requiresUpdate flag not processed.
+
+## Version 1.11.1.2 (2023-03-07)
 - Added c++ Linux and Windows sample.
 - Simplify dotnet sample.
 
