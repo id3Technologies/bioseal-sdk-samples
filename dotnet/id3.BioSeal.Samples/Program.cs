@@ -24,7 +24,7 @@ namespace id3.BioSeal.Samples
 
             // optionnal, use cache
             bioseal_.ExternalResourceCallback = new ResourceCallbackHandler(GetExternalResourceWithCache);
-            bioseal_.EnableDownloadCache = true;
+            //bioseal_.EnableDownloadCache = true;
 
             // This basic sample shows how to read BioSeal biographics only contents
             displayBioSealInfo(@"../../../../data/ExBioSealBiographics.bin");
@@ -191,7 +191,7 @@ namespace id3.BioSeal.Samples
 
                         case FieldType.Date:
                             {
-                                var datetime = field.ValueAsDateTime;
+                                var datetime = field.ValueAsDate;
                                 System.DateTime date_time;
                                 date_time = new System.DateTime(datetime.Year, datetime.Month, datetime.Day);
                                 data = date_time.ToLongDateString();
@@ -200,7 +200,7 @@ namespace id3.BioSeal.Samples
 
                         case FieldType.Time:
                             {
-                                var time = field.ValueAsDateTime;
+                                var time = field.ValueAsTime;
                                 var now = System.DateTime.Now;
                                 var date_time = new System.DateTime(now.Year, now.Month, now.Day, time.Hour, time.Minute, time.Second);
                                 data = date_time.ToShortTimeString();

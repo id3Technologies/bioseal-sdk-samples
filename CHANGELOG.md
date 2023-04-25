@@ -1,5 +1,8 @@
 # id3 BioSeal SDK Samples Changelog
 
+## Version 1.16.2.4 (2023-04-25)
+- Update with SDK BioSeal 1.16.2.
+
 ## Version 1.11.1.3 (2023-03-08)
 - Fixed issue in c++ callback : file not created and requiresUpdate flag not processed.
 

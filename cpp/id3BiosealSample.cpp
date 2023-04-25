@@ -213,7 +213,7 @@ template <class T, typename F> std::string getDateTime(T handle, F fct) {
     std::string value_str;
     ID3_BIOSEAL_DATE_TIME hDateTime{};
     id3BiosealDateTime_Initialize(&hDateTime);
-    fct(handle, hDateTime);
+    int sdk_err = fct(handle, hDateTime);
     DateTime dt{};
     bool valid = false;
     id3BiosealDateTime_IsDateTimeValid(hDateTime, &valid);
@@ -293,10 +293,16 @@ int getPayload(ID3_BIOSEAL hBioseal, std::map<std::string, std::string> &payload
                         payload[key] = getValueAsBinaryString(hField);
                         break;
                     }
-                    case id3BiosealFieldType_Date:
-                    case id3BiosealFieldType_Timestamp:
-                    case id3BiosealFieldType_Time: {
+                    case id3BiosealFieldType_Date: {
+                        payload[key] = getDateTime(hField, id3BiosealField_GetValueAsDate);
+                        break;
+                    }
+                    case id3BiosealFieldType_Timestamp: {
                         payload[key] = getDateTime(hField, id3BiosealField_GetValueAsDateTime);
+                        break;
+                    }
+                    case id3BiosealFieldType_Time: {
+                        payload[key] = getDateTime(hField, id3BiosealField_GetValueAsTime);
                         break;
                     }
                     case id3BiosealFieldType_ObjectArray: break;
@@ -484,7 +490,7 @@ int main()
 
     // optionnal, use cache
     id3Bioseal_SetExternalResourceCallback(hBioseal, getExternalResourceWithCache, nullptr);
-    id3Bioseal_SetEnableDownloadCache(hBioseal, true);
+    //id3Bioseal_SetEnableDownloadCache(hBioseal, true);
 
     // This basic sample shows how to read BioSeal biographics only contents
     displayBioSealInfo(hBioseal, "../../data/ExBioSealBiographics.bin");
