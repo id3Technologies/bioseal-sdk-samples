@@ -27,13 +27,13 @@ namespace id3.BioSeal.Samples
             //bioseal_.EnableDownloadCache = true;
 
             // This basic sample shows how to read BioSeal biographics only contents
-            displayBioSealInfo(@"../../../../data/ExBioSealBiographics.bin");
+            displayBioSealInfo(@"../../../../data/ExBioSealBiographics.dat");
 
             // This sample shows how to read BioSeal face image and template contents
-            displayBioSealInfo(@"../../../../data/ExBioSealFace.bin");
+            displayBioSealInfo(@"../../../../data/ExBioSealFace.dat");
 
             // This accreditation sample shows how to read BioSeal face template contents
-            displayBioSealInfo(@"../../../../data/ExBioSealAccreditation.bin");
+            displayBioSealInfo(@"../../../../data/ExBioSealAccreditation.dat");
 
             Console.ReadLine();
         }
@@ -78,47 +78,47 @@ namespace id3.BioSeal.Samples
             Console.WriteLine("   Face template: " + hasFaceTemplate);
             if (hasFaceTemplate)
             {
-                using (var field_face_list = bioseal_.FindBiometrics(BiometricDataType.FaceTemplate, BiometricFormat.Undefined))
+                using (var field_face_list = bioseal_.FindBiometrics(BiometricDataType.FacialFeatures, null))
                 {
                     if (field_face_list.Count > 0)
                     {
                         var field_face = field_face_list.Get(0);
                         Console.WriteLine("   Face template saved in data folder");
-                        File.WriteAllBytes(path.Replace(".bin", ".template"), field_face.ValueAsBinary);
+                        File.WriteAllBytes(path.Replace(".dat", ".template"), field_face.ValueAsBinary);
                     }
                 }
             }
 
             // display and save face image if existing
-            bool hasFaceImage = bioseal_.ContainsFaceImages;
+            bool hasFaceImage = bioseal_.ContainsPortraits;
             Console.WriteLine("   Face image: " + hasFaceImage);
             if (hasFaceImage)
             {
-                using (var field_face_list = bioseal_.FindBiometrics(BiometricDataType.FaceImage, BiometricFormat.Undefined))
+                using (var field_face_list = bioseal_.FindFieldsByExtension(FieldExtensionType.Portrait))
                 {
                     if (field_face_list.Count > 0)
                     {
                         var field_face = field_face_list.Get(0);
                         Console.WriteLine("   Face image saved in data folder");
-                        File.WriteAllBytes(path.Replace(".bin", ".webp"), field_face.ValueAsBinary);
+                        File.WriteAllBytes(path.Replace(".dat", ".webp"), field_face.ValueAsBinary);
                     }
                 }
             }
 
             // fetch and save presentation view
             Console.WriteLine("   Presentation view supported languages:");
-            foreach (string supportedLanguage in bioseal_.SupportedHtmlViewLanguages)
+            foreach (string supportedLanguage in bioseal_.SupportedLanguages)
             {
                 Console.WriteLine("      " + supportedLanguage);
             }
             // Get default language
             bioseal_.BuildHtmlView(null, true);
-            File.WriteAllText(path.Replace(".bin", ".html"), bioseal_.HtmlView);
+            File.WriteAllText(path.Replace(".dat", ".html"), bioseal_.HtmlView);
             Console.WriteLine("   Presentation view saved in data folder");
 
             // build and save JSON file
             string jsonPayload = bioseal_.BuildPayloadAsJson("  ");
-            File.WriteAllText(path.Replace(".bin", ".json"), jsonPayload);
+            File.WriteAllText(path.Replace(".dat", ".json"), jsonPayload);
             Console.WriteLine("   JSON representation saved in data folder");
 
             // display signature information
@@ -227,43 +227,40 @@ namespace id3.BioSeal.Samples
         /// <param name="context">Bioseal handle</param>
         /// <param name="argsPtr">ResourceCallbackArgs handle</param>
         /// <returns>Error code</returns>
-        static int GetExternalResourceWithCache(IntPtr context, IntPtr argsPtr)
+        static int GetExternalResourceWithCache(object context, ResourceCallbackArgs args)
         {
             int err = 0;
             try
             {
-                using (ResourceCallbackArgs args = new ResourceCallbackArgs(argsPtr))
+                if (!localCache_)
                 {
-                    if (!localCache_)
+                    args.Download();
+                }
+                else
+                {
+#if DEBUG
+                    Console.WriteLine("URI = " + args.Uri);
+#endif
+                    // Cache disque
+                    if (!Directory.Exists(localCacheDir_))
+                        Directory.CreateDirectory(localCacheDir_);
+
+                    string[] cache_files = Directory.GetFiles(localCacheDir_, args.ResourceName);
+                    if (cache_files.Length == 0 || args.RequiresUpdate)
                     {
-                        args.Download();
+                        try
+                        {
+                            args.Download();
+                            File.WriteAllBytes(localCacheDir_ + args.ResourceName, args.OutputData);
+                        }
+                        catch (BiosealException)
+                        {
+                            err = (int)BiosealError.ResourceNotFound;
+                        }
                     }
                     else
                     {
-#if DEBUG
-                        Console.WriteLine("URI = " + args.Uri);
-#endif
-                        // Cache disque
-                        if (!Directory.Exists(localCacheDir_))
-                            Directory.CreateDirectory(localCacheDir_);
-
-                        string[] cache_files = Directory.GetFiles(localCacheDir_, args.ResourceName);
-                        if (cache_files.Length == 0 || args.RequiresUpdate)
-                        {
-                            try
-                            {
-                                args.Download();
-                                File.WriteAllBytes(localCacheDir_ + args.ResourceName, args.OutputData);
-                            }
-                            catch (BiosealException)
-                            {
-                                err = (int)BiosealError.ResourceNotFound;
-                            }
-                        }
-                        else
-                        {
-                            args.OutputData = File.ReadAllBytes(cache_files[0]);
-                        }
+                        args.OutputData = File.ReadAllBytes(cache_files[0]);
                     }
                 }
             }

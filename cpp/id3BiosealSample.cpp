@@ -323,7 +323,7 @@ bool extractBiometrics(ID3_BIOSEAL hBioseal, id3BiosealBiometricDataType eBiomet
     bool ret = false;
     ID3_BIOSEAL_FIELD_LIST hResultFieldList{};
     id3BiosealFieldList_Initialize(&hResultFieldList);
-    id3Bioseal_FindBiometrics(hBioseal, eBiometricDataType, id3BiosealBiometricFormat_Undefined, hResultFieldList);
+    id3Bioseal_FindBiometrics(hBioseal, eBiometricDataType, nullptr, hResultFieldList);
     int count{};
     id3BiosealFieldList_GetCount(hResultFieldList, &count);
     if (count >= 1) {
@@ -342,6 +342,36 @@ bool extractBiometrics(ID3_BIOSEAL hBioseal, id3BiosealBiometricDataType eBiomet
         id3BiosealField_Dispose(&hField);
     }
     id3BiosealFieldList_Dispose(&hResultFieldList);
+    return ret;
+}
+
+bool extractPortraits(ID3_BIOSEAL hBioseal, const char *path, const char *ext) {
+    bool ret = false;
+    bool containsPortraits{};
+    int err = id3Bioseal_GetContainsPortraits(hBioseal, &containsPortraits);
+    if (containsPortraits) {
+        ID3_BIOSEAL_FIELD_LIST hResultFieldList{};
+        id3BiosealFieldList_Initialize(&hResultFieldList);
+        err = id3Bioseal_FindFieldsByExtension(hBioseal, id3BiosealFieldExtensionType_Portrait, hResultFieldList);
+        int count{};
+        err = id3BiosealFieldList_GetCount(hResultFieldList, &count);
+        if (count >= 1) {
+            ID3_BIOSEAL_FIELD hField{};
+            id3BiosealField_Initialize(&hField);
+            int sdk_err = id3BiosealFieldList_Get(hResultFieldList, 0, hField);
+            if (sdk_err == 0)
+            {
+                std::vector<uint8_t> data;
+                getBinary(hField, id3BiosealField_GetValueAsBinary, data);
+                filesystem::path fs_path = path;
+                fs_path.replace_extension(ext);
+                writeBinaryFile(fs_path.string(), data);
+                ret = true;
+            }
+            id3BiosealField_Dispose(&hField);
+        }
+        id3BiosealFieldList_Dispose(&hResultFieldList);
+    }
     return ret;
 }
 
@@ -398,25 +428,25 @@ void displayBioSealInfo(ID3_BIOSEAL hBioseal, const char *path) {
     id3Bioseal_GetContainsFaceTemplates(hBioseal, &hasFaceTemplate);
     printf("   Face template: %s\n", BOOLEAN_STRING(hasFaceTemplate));
     if (hasFaceTemplate) {
-        if (extractBiometrics(hBioseal, id3BiosealBiometricDataType_FaceTemplate, path, ".template")) {
+        if (extractBiometrics(hBioseal, id3BiosealBiometricDataType_FacialFeatures, path, ".template")) {
             printf("   Face template saved in data folder\n");
         }
     }
 
     // display and save face image if existing
     bool hasFaceImage{};
-    id3Bioseal_GetContainsFaceImages(hBioseal, &hasFaceImage);
+    id3Bioseal_GetContainsPortraits(hBioseal, &hasFaceImage);
     printf("   Face image: %s\n", BOOLEAN_STRING(hasFaceImage));
     if (hasFaceImage)
     {
-        if (extractBiometrics(hBioseal, id3BiosealBiometricDataType_FaceImage, path, ".webp")) {
+        if (extractPortraits(hBioseal, path, ".webp")) {
             printf("   Face image saved in data folder\n");
         }
     }
 
     // fetch and save presentation view
     {
-        auto list = getStringList(hBioseal, id3Bioseal_GetSupportedHtmlViewLanguages);
+        auto list = getStringList(hBioseal, id3Bioseal_GetSupportedLanguages);
         std::string msg = "   Presentation view supported languages: ";
         for (auto & str : list) {
             aformat(msg, "%s, ", str.c_str());
@@ -486,20 +516,19 @@ int main()
 
     // The bioseal instance must first be initialized
     ID3_BIOSEAL hBioseal{};
-    id3Bioseal_Initialize(&hBioseal);
+    int err = id3Bioseal_Initialize(&hBioseal);
 
     // optionnal, use cache
-    id3Bioseal_SetExternalResourceCallback(hBioseal, getExternalResourceWithCache, nullptr);
-    //id3Bioseal_SetEnableDownloadCache(hBioseal, true);
+    err = id3Bioseal_SetExternalResourceCallback(hBioseal, getExternalResourceWithCache, nullptr);
 
     // This basic sample shows how to read BioSeal biographics only contents
-    displayBioSealInfo(hBioseal, "../../data/ExBioSealBiographics.bin");
+    displayBioSealInfo(hBioseal, "../../../data/ExBioSealBiographics.dat");
 
     // This sample shows how to read BioSeal face image and template contents
-    displayBioSealInfo(hBioseal, "../../data/ExBioSealFace.bin");
+    displayBioSealInfo(hBioseal, "../../../data/ExBioSealFace.dat");
 
     // This accreditation sample shows how to read BioSeal face template contents
-    displayBioSealInfo(hBioseal, "../../data/ExBioSealAccreditation.bin");
+    displayBioSealInfo(hBioseal, "../../../data/ExBioSealAccreditation.dat");
 
     id3Bioseal_Dispose(&hBioseal);
 }
