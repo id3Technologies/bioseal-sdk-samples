@@ -37,7 +37,7 @@ class Sample {
         let dataBioseal = [UInt8](NSDataAsset(name: name)!.data)
 
         do {
-            try bioseal.decode(data: dataBioseal)
+            try bioseal.verifyFromBuffer(data: dataBioseal)
             try bioseal.verify()
         } catch let ex as BiosealException {
             print(ex.getMessage())

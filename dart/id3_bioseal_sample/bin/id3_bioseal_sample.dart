@@ -36,8 +36,7 @@ void displayBioSealInfo(String path) {
   print("Decoding BioSeal file $path");
   final dataBioseal = File(path).readAsBytesSync();
   try {
-    bioseal.decode(dataBioseal);
-    bioseal.verify();
+    bioseal.verifyFromBuffer(dataBioseal);
   } on BiosealException catch (ex) {
     print(ex.message);
     rethrow;

@@ -12,11 +12,9 @@ public class BiosealSdkSampleCLI {
 
     static void displayBioSealInfo(Bioseal bioseal, String biosealPath) {
         try {
-            System.out.println("Decoding BioSeal file " + biosealPath);
+            System.out.println("Decoding and verification BioSeal file " + biosealPath);
             byte[] bFile = Files.readAllBytes(Paths.get(biosealPath));
-            bioseal.decode(bFile);
-            System.out.println("Verification result :");
-            VerificationResult verifyResult = bioseal.verify();
+            VerificationResult verifyResult =bioseal.verifyFromBuffer(bFile);
             System.out.println("governanceValid = " + verifyResult.governanceValid);
             System.out.println("caCertificateVerified = " + verifyResult.caCertificateVerified);
             System.out.println("certificationChainVerified = " + verifyResult.certificationChainVerified);

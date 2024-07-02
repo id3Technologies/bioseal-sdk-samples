@@ -390,8 +390,7 @@ void displayBioSealInfo(ID3_BIOSEAL hBioseal, const char *path) {
     std::vector<uint8_t> dataBioSeal;
     id3BiosealVerificationResult verificationResult{};
     if (readBinaryFile(path, dataBioSeal)) {
-        check(id3Bioseal_Decode(hBioseal, dataBioSeal.data(), (int)dataBioSeal.size()), "id3Bioseal_Decode");
-        check(id3Bioseal_Verify(hBioseal, &verificationResult), "id3Bioseal_Verify");
+        check(id3Bioseal_VerifyFromBuffer(hBioseal, dataBioSeal.data(), (int)dataBioSeal.size(), &verificationResult), "id3Bioseal_VerifyFromBuffer");
     }
     else {
         printf("Error reading file '%s'\n", path);

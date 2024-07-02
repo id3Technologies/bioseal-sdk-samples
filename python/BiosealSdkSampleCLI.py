@@ -42,8 +42,7 @@ def displayBioSealInfo(path: str):
     try:
         with open(path) as f:
             data = f.read()
-            bioseal.decode_from_string(data)
-            bioseal.verify()
+            bioseal.verify_from_string(data)
 
         print(f"  BioSeal format : {bioseal.format}")
         # display manifest information

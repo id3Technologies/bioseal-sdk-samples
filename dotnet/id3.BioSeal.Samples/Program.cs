@@ -46,8 +46,7 @@ namespace id3.BioSeal.Samples
             byte[] dataBioSeal = File.ReadAllBytes(path);
             try
             {
-                bioseal_.Decode(dataBioSeal);
-                bioseal_.Verify();
+                bioseal_.VerifyFromBuffer(dataBioSeal);
             }
             catch (BiosealException ex)
             {

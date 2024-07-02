@@ -43,8 +43,7 @@ class Sample(val context: Context) {
         println("Decoding BioSeal file $path")
         val dataBioseal = context.assets.open(path).readBytes()
         try {
-            bioseal.decode(dataBioseal)
-            bioseal.verify()
+            bioseal.verifyFromBuffer(dataBioseal)
         } catch (ex: BiosealException) {
             println(ex.message)
             throw ex
