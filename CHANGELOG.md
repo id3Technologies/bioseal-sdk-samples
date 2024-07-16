@@ -1,5 +1,8 @@
 # id3 BioSeal SDK Samples Changelog
 
+## Version 1.33.0.0 (2024-07-16)
+- Update with SDK BioSeal 1.33.0.
+
 ## Version 1.32.0.0 (2024-07-02)
 - Update with SDK BioSeal 1.32.0.
 

@@ -377,9 +377,9 @@ bool extractPortraits(ID3_BIOSEAL hBioseal, const char *path, const char *ext) {
 
 void buildPayloadAsJson(ID3_BIOSEAL hBioseal, const char *indentation, std::string &str) {
     int str_size = -1;
-    id3Bioseal_BuildPayloadAsJson(hBioseal, indentation, nullptr, &str_size);
+    id3Bioseal_BuildVdsAsJson(hBioseal, indentation, nullptr, &str_size);
     str.resize(str_size);
-    id3Bioseal_BuildPayloadAsJson(hBioseal, indentation, (char *)str.data(), &str_size);
+    id3Bioseal_BuildVdsAsJson(hBioseal, indentation, (char *)str.data(), &str_size);
     str.resize(str_size);
 }
 

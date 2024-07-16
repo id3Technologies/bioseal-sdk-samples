@@ -35,7 +35,7 @@ namespace id3.BioSeal.Samples
             // This accreditation sample shows how to read BioSeal face template contents
             displayBioSealInfo(@"../../../../data/ExBioSealAccreditation.dat");
 
-            Console.ReadLine();
+            //Console.ReadLine();
         }
 
         static void displayBioSealInfo(string path)
@@ -116,7 +116,7 @@ namespace id3.BioSeal.Samples
             Console.WriteLine("   Presentation view saved in data folder");
 
             // build and save JSON file
-            string jsonPayload = bioseal_.BuildPayloadAsJson("  ");
+            string jsonPayload = bioseal_.BuildVdsAsJson("  ");
             File.WriteAllText(path.Replace(".dat", ".json"), jsonPayload);
             Console.WriteLine("   JSON representation saved in data folder");
 

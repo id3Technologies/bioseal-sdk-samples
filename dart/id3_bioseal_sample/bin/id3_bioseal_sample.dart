@@ -94,7 +94,7 @@ void displayBioSealInfo(String path) {
   print("   Presentation view saved in data folder");
 
   // build and save JSON file
-  final jsonPayload = bioseal.buildPayloadAsJson("  ");
+  final jsonPayload = bioseal.buildVdsAsJson("  ");
   File(path.replaceAll(".dat", ".json")).writeAsStringSync(jsonPayload);
   print("   JSON representation saved in data folder");
 

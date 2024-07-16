@@ -87,7 +87,7 @@ public class BiosealSdkSampleCLI {
             System.out.println("   Presentation view saved in data folder");
 
             // build and save JSON file
-            var jsonPayload = bioseal.buildPayloadAsJson("  ");
+            var jsonPayload = bioseal.buildVdsAsJson("  ");
             Files.writeString(Paths.get(biosealPath.replace(".dat", ".json")), jsonPayload);
             System.out.println("   JSON representation saved in data folder");
 

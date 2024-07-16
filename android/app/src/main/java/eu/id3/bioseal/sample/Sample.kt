@@ -107,7 +107,7 @@ class Sample(val context: Context) {
         println("   Presentation view saved in data folder")
 
         // build and save JSON file
-        val jsonPayload = bioseal.buildPayloadAsJson("  ")
+        val jsonPayload = bioseal.buildVdsAsJson("  ")
         File(localCacheDir, path.replace(".dat", ".json")).writeText(jsonPayload)
         println("   JSON representation saved in data folder")
 
