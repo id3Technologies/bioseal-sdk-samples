@@ -138,8 +138,8 @@ namespace id3.BioSeal.Samples
 
             // display certificate information
             Console.WriteLine("   Certificate:");
-            Console.WriteLine("      Authority ID: " + bioseal_.CertificateAuthorityId);
-            Console.WriteLine("      Authority issuing country: " + bioseal_.CertificateAuthorityIssuingCountry);
+            Console.WriteLine("      Authority AC: " + bioseal_.CertificateAuthorityReference);
+            Console.WriteLine("      Authority ID: " + bioseal_.CertificateIdentifier);
             Console.WriteLine("      Issuer: " + bioseal_.CertificateInformation.IssuerCommonName);
             Console.WriteLine("      Subject: " + bioseal_.CertificateInformation.SubjectCommonName);
             Console.WriteLine("      Organization: " + bioseal_.CertificateInformation.SubjectOrganization);

@@ -116,8 +116,8 @@ void displayBioSealInfo(String path) {
 
   // display certificate information
   print("   Certificate:");
-  print("      Authority ID: ${bioseal.certificateAuthorityId}");
-  print("      Authority issuing country: ${bioseal.certificateAuthorityIssuingCountry}");
+  print("      Authority AC: ${bioseal.certificateAuthorityReference}");
+  print("      Authority ID: ${bioseal.certificateIdentifier}");
   print("      Issuer: ${bioseal.certificateInformation.issuerCommonName}");
   print("      Subject: ${bioseal.certificateInformation.subjectCommonName}");
   print("      Organization: ${bioseal.certificateInformation.subjectOrganization}");

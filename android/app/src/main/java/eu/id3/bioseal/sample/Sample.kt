@@ -129,8 +129,8 @@ class Sample(val context: Context) {
 
         // display certificate information
         println("   Certificate:")
-        println("      Authority ID: ${bioseal.certificateAuthorityId}")
-        println("      Authority issuing country: ${bioseal.certificateAuthorityIssuingCountry}")
+        println("      Authority AC: ${bioseal.certificateAuthorityReference}")
+        println("      Authority ID: ${bioseal.certificateIdentifier}")
         println("      Issuer: ${bioseal.certificateInformation.issuerCommonName}")
         println("      Subject: ${bioseal.certificateInformation.subjectCommonName}")
         println("      Organization: ${bioseal.certificateInformation.subjectOrganization}")

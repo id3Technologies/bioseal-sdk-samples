@@ -495,8 +495,8 @@ void displayBioSealInfo(ID3_BIOSEAL hBioseal, const char *path) {
     ID3_BIOSEAL_CERTIFICATE_INFORMATION hCertificateInformation{};
     id3BiosealCertificateInformation_Initialize(&hCertificateInformation);
     id3Bioseal_GetCertificateInformation(hBioseal, hCertificateInformation);
-    printf("      Authority ID: %s\n", getString(hBioseal, id3Bioseal_GetCertificateAuthorityId).c_str());
-    printf("      Authority issuing country: %s\n", getString(hBioseal, id3Bioseal_GetCertificateAuthorityIssuingCountry).c_str());
+    printf("      Authority AC: %s\n", getString(hBioseal, id3Bioseal_GetCertificateAuthorityReference).c_str());
+    printf("      Authority ID: %s\n", getString(hBioseal, id3Bioseal_GetCertificateIdentifier).c_str());
     printf("      Issuer: %s\n", getString(hCertificateInformation, id3BiosealCertificateInformation_GetIssuerCommonName).c_str());
     printf("      Subject: %s\n", getString(hCertificateInformation, id3BiosealCertificateInformation_GetSubjectCommonName).c_str());
     printf("      Organization: %s\n", getString(hCertificateInformation, id3BiosealCertificateInformation_GetSubjectOrganization).c_str());

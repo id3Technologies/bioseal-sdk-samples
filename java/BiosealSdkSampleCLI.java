@@ -111,8 +111,8 @@ public class BiosealSdkSampleCLI {
             // display certificate information
             var certificateInformation = bioseal.getCertificateInformation();
             System.out.println("   Certificate:");
-            System.out.println("      Authority ID: " + bioseal.getCertificateAuthorityId());
-            System.out.println("      Authority issuing country: " + bioseal.getCertificateAuthorityIssuingCountry());
+            System.out.println("      Authority AC: " + bioseal.getCertificateAuthorityReference());
+            System.out.println("      Authority ID: " + bioseal.getCertificateIdentifier());
             System.out.println("      Issuer: " + certificateInformation.getIssuerCommonName());
             System.out.println("      Subject: " + certificateInformation.getSubjectCommonName());
             System.out.println("      Organization: " + certificateInformation.getSubjectOrganization());

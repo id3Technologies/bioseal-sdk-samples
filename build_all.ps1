@@ -112,7 +112,7 @@ function BuildJava {
     }
     catch
     {
-        Write-Output "Error in dart"
+        Write-Output "Error in java"
         throw
     }
     finally
