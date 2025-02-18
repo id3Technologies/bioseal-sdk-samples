@@ -100,7 +100,7 @@ class Sample {
         print("   Presentation view saved in data folder")
 
         // build and save JSON file
-        let jsonPayload = try bioseal.buildPayloadAsJson(indentation: "  ")
+        let jsonPayload = try bioseal.buildVdsAsJson(indentation: "  ")
         let jsonFilePath = localCacheDir.appendingPathComponent(name +  ".json").path
         try? jsonPayload.write(toFile: jsonFilePath, atomically: true, encoding: .utf8)
         print("   JSON representation saved in data folder")
@@ -123,8 +123,7 @@ class Sample {
 
         // display certificate information
         print("   Certificate:")
-        print("      Authority ID: \(try bioseal.getCertificateAuthorityId())")
-        print("      Authority issuing country: \(try bioseal.getCertificateAuthorityIssuingCountry())")
+        print("      Authority reference: \(try bioseal.getCertificateAuthorityReference())")
         print("      Issuer: \(try bioseal.getCertificateInformation().getIssuerCommonName())")
         print("      Subject: \(try bioseal.getCertificateInformation().getSubjectCommonName())")
         print("      Organization: \(try bioseal.getCertificateInformation().getSubjectOrganization())")

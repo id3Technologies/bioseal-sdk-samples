@@ -23,13 +23,13 @@ void main(List<String> arguments) {
   bioseal.setExternalResourceCallback(getExternalResourceWithCache);
 
   // This basic sample shows how to read BioSeal biographics only contents
-  displayBioSealInfo("../../data/ExBioSealBiographics.dat");
+  displayBioSealInfo("../../../data/ExBioSealBiographics.dat");
 
   // This sample shows how to read BioSeal face image and template contents
-  displayBioSealInfo("../../data/ExBioSealFace.dat");
+  displayBioSealInfo("../../../data/ExBioSealFace.dat");
 
   // This accreditation sample shows how to read BioSeal face template contents
-  displayBioSealInfo("../../data/ExBioSealAccreditation.dat");
+  displayBioSealInfo("../../../data/ExBioSealAccreditation.dat");
 }
 
 void displayBioSealInfo(String path) {
@@ -60,12 +60,14 @@ void displayBioSealInfo(String path) {
   bool hasFaceTemplate = bioseal.containsFaceTemplates;
   print("   Face template: $hasFaceTemplate");
   if (hasFaceTemplate) {
-    final fieldFaceList = bioseal.findBiometrics(BiometricDataType.facialFeatures, null);
+    final fieldFaceList =
+        bioseal.findBiometrics(BiometricDataType.facialFeatures, null);
 
     if (fieldFaceList.count > 0) {
       final fieldFace = fieldFaceList.get(0);
       print("   Face template saved in data folder");
-      File(path.replaceAll(".dat", ".template")).writeAsBytesSync(fieldFace.valueAsBinary);
+      File(path.replaceAll(".dat", ".template"))
+          .writeAsBytesSync(fieldFace.valueAsBinary);
     }
   }
 
@@ -73,12 +75,14 @@ void displayBioSealInfo(String path) {
   bool hasFaceImage = bioseal.containsPortraits;
   print("   Face image: $hasFaceImage");
   if (hasFaceImage) {
-    final fieldFaceList = bioseal.findFieldsByExtension(FieldExtensionType.portrait);
+    final fieldFaceList =
+        bioseal.findFieldsByExtension(FieldExtensionType.portrait);
 
     if (fieldFaceList.count > 0) {
       final fieldFace = fieldFaceList.get(0);
       print("   Face image saved in data folder");
-      File(path.replaceAll(".dat", ".webp")).writeAsBytesSync(fieldFace.valueAsBinary);
+      File(path.replaceAll(".dat", ".webp"))
+          .writeAsBytesSync(fieldFace.valueAsBinary);
     }
   }
 
@@ -100,19 +104,26 @@ void displayBioSealInfo(String path) {
 
   // display signature information
   print("   Signature:");
-  print("      Signature verified status: ${bioseal.verificationResult.vdsSignatureVerified}");
-  print("      Certification chain verified status: ${bioseal.verificationResult.certificationChainVerified}");
-  print("      Certificate usage authorized status: ${bioseal.verificationResult.signingCertificateUsageAuthorized}");
+  print(
+      "      Signature verified status: ${bioseal.verificationResult.vdsSignatureVerified}");
+  print(
+      "      Certification chain verified status: ${bioseal.verificationResult.certificationChainVerified}");
+  print(
+      "      Certificate usage authorized status: ${bioseal.verificationResult.signingCertificateUsageAuthorized}");
 
   // display governance information
   print("   Governance:");
   print("      LoTL: ${bioseal.lotlUrl}");
   print("      TSL: ${bioseal.tslUrl}");
   print("      Manifest: ${bioseal.manifestUrl}");
-  print("      LoTL valid status: ${bioseal.verificationResult.lotlGovernanceValid}");
-  print("      TSL valid status: ${bioseal.verificationResult.tslGovernanceValid}");
-  print("      Manifest valid status: ${bioseal.verificationResult.manifestGovernanceValid}");
-  print("      Authority verified status: ${bioseal.verificationResult.caCertificateVerified}");
+  print(
+      "      LoTL valid status: ${bioseal.verificationResult.lotlGovernanceValid}");
+  print(
+      "      TSL valid status: ${bioseal.verificationResult.tslGovernanceValid}");
+  print(
+      "      Manifest valid status: ${bioseal.verificationResult.manifestGovernanceValid}");
+  print(
+      "      Authority verified status: ${bioseal.verificationResult.caCertificateVerified}");
 
   // display certificate information
   print("   Certificate:");
@@ -120,10 +131,14 @@ void displayBioSealInfo(String path) {
   print("      Authority ID: ${bioseal.certificateIdentifier}");
   print("      Issuer: ${bioseal.certificateInformation.issuerCommonName}");
   print("      Subject: ${bioseal.certificateInformation.subjectCommonName}");
-  print("      Organization: ${bioseal.certificateInformation.subjectOrganization}");
-  print("      Organization unit: ${bioseal.certificateInformation.subjectOrganizationalUnit}");
-  print("      Date of creation: ${bioseal.certificateInformation.notBefore.toString()}");
-  print("      Date of expiration: ${bioseal.certificateInformation.notAfter.toString()}");
+  print(
+      "      Organization: ${bioseal.certificateInformation.subjectOrganization}");
+  print(
+      "      Organization unit: ${bioseal.certificateInformation.subjectOrganizationalUnit}");
+  print(
+      "      Date of creation: ${bioseal.certificateInformation.notBefore.toString()}");
+  print(
+      "      Date of expiration: ${bioseal.certificateInformation.notAfter.toString()}");
 }
 
 /// Gets the dictionary of biographics data from the BioSeal instance.

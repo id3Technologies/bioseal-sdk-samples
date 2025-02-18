@@ -106,7 +106,7 @@ def displayBioSealInfo(path: str):
         print("   Presentation view saved in data folder")
 
         # build and save JSON file
-        jsonPayload = bioseal.build_payload_as_json("  ")
+        jsonPayload = bioseal.build_vds_as_json("  ")
         writeFileStr(path.replace(".dat", ".json"), jsonPayload)
         print("   JSON representation saved in data folder")
 
@@ -130,8 +130,7 @@ def displayBioSealInfo(path: str):
         # display certificate information
         print( "   Certificate:")
         certificateInformation = bioseal.certificate_information
-        print(f"      Authority ID: {bioseal.certificate_authority_id}")
-        print(f"      Authority issuing country: {bioseal.certificate_authority_issuing_country}")
+        print(f"      Authority reference: {bioseal.certificate_authority_reference}")
         print(f"      Issuer: {certificateInformation.issuer_common_name}")
         print(f"      Subject: {certificateInformation.subject_common_name}")
         print(f"      Organization: {certificateInformation.subject_organization}")
@@ -145,12 +144,13 @@ bioseal = Bioseal()
 bioseal.external_resource_callback = resourceCallbackHandler
 
 # This basic sample shows how to read BioSeal biographics only contents
-displayBioSealInfo("/data/ExBioSealBiographics.dat")
+displayBioSealInfo("../data/ExBioSealBiographics.dat")
 
 # This sample shows how to read BioSeal face image and template contents
-displayBioSealInfo("data/ExBioSealFace.dat")
+displayBioSealInfo("../data/ExBioSealFace.dat")
 
 # This accreditation sample shows how to read BioSeal face template contents
-displayBioSealInfo("data/ExBioSealAccreditation.dat")
+displayBioSealInfo("../data/ExBioSealAccreditation.dat")
 
-os.system("pause")
+print(" Sample terminated successfully")
+#os.system("pause")
